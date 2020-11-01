@@ -58,3 +58,7 @@ Optional arguments:
 | --min_obs_stack 	| 4 	| number of past observations to be stacked
 
 The PyBullet environment only supports the 'walk' task and does not support the latency or delay argments.
+
+### License
+
+This project is licensed under the terms of the MIT license. See LICENSE file for details.
