@@ -42,7 +42,7 @@ We consider three benchmark tasks:
 TD3 algorithm is able to successfully learn all three tasks. Learning to stand takes around 12 minutes of experience, learning to turn takes 35 minues of experience, and learning to walk takes 40 minutes of experience.
 
 <p align="center">
-  <img src="https://github.com/AaltoVision/ant-robot/blob/icra21_cleanup/training_results.jpg?raw=true" alt="Training results"/>
+  <img src="https://github.com/AaltoVision/realant-rl/blob/main/training_results.jpg?raw=true" alt="Training results"/>
 </p>
 
 The training code is decoupled into a training client and a rollout server, communicating using ZeroMQ. The training client (`train_client.py`) controls the whole learning process. It sends the latest policy weights to the rollout server (`rollout_server.py`) at the beginning of each episode. The rollout server loads the policy weights, collects the latest observations from the robot, and sends the action computed using the policy network back to the robot. After completing an episode, the rollout server sends back the collected data to the train client. The newly collected data is added to a replay buffer and the agent is updated a few times by sampling from this replay buffer.
