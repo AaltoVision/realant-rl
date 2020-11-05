@@ -1,5 +1,12 @@
 # Reinforcement Learning with RealAnt
 
+Video:
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=pG-XhH-9s7o">
+    <img src="https://github.com/AaltoVision/realant-rl/blob/main/video_thumbnail.jpg?raw=true" alt="RealAnt Summary Video"/>
+  </a>
+</p>
+
 This repository contains source code for experiments in the paper titled "[RealAnt: An Open-Source Low-Cost Quadruped for Research in Real-World Reinforcement Learning]()" by Rinu Boney*, Jussi Sainio*, Mikko Kaivola, Arno Solin, and Juho Kannala. It consists of:
 - Supporting software for reinforcement learning with the RealAnt robot
 - PyTorch implementations of TD3 and SAC algorithms
