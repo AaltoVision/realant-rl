@@ -1,13 +1,42 @@
 # Reinforcement Learning with RealAnt
 
-This repository contains source code for experiments in the paper titled "RealAnt: An Open-Source Low-Cost Quadruped for Research in Real-World Reinforcement Learning" by Rinu Boney*, Jussi Sainio*, Mikko Kaivola, Arno Solin, and Juho Kannala. It consists of:
+This repository contains source code for experiments in the paper titled "[RealAnt: An Open-Source Low-Cost Quadruped for Research in Real-World Reinforcement Learning]()" by Rinu Boney*, Jussi Sainio*, Mikko Kaivola, Arno Solin, and Juho Kannala. It consists of:
 - Supporting software for reinforcement learning with the RealAnt robot
 - PyTorch implementations of TD3 and SAC algorithms
 - MuJoCo and PyBullet environments of the RealAnt robot
 
-Code for the RealAnt platform including the 3D models, microcontroller board firmware, Python interface and pose estimation is available here: https://github.com/OteRobotics/realant
+### RealAnt
+
+RealAnt is a minimal and low-cost (~350€ in materials) physical version of the popular 'Ant' benchmark used in reinforcement learning. It can be built using easily available electronic components and a 3D printed body. Code for the RealAnt platform including the 3D models, microcontroller board firmware, Python interface and pose estimation is available here: https://github.com/OteRobotics/realant
+
+<p align="center">
+  <img src="https://github.com/OteRobotics/realant/blob/master/stl/RealAnt-v1.jpeg?raw=true" width="50%" alt="Photo of RealAnt"/>
+</p>
+
+**Observation space** (29-dim):
+1. x, y, and z velocities of the torso (3),
+2. z position of the torso (1),
+3. sin and cos values of Euler angles of the torso (6),
+4. velocities of Euler angles of the torso (3),
+5. angular positions of the joints (8), and
+6. angular velocities of the joints (8).
+
+We rely on augmented reality (AR) tag tracking using ArUco tags for pose estimation.
+
+**Action space** (8-dim): set-points for the angular positions of the robot joints.
 
 ### Experiments with RealAnt Robot
+
+We consider three benchmark tasks:
+1. **Stand** upright.
+2. **Turn** 180 degrees.
+3. **Walk** forward as fast as possible.
+
+TD3 algorithm is able to successfully learn all three tasks. Learning to stand takes around 12 minutes of experience, learning to turn takes 35 minues of experience, and learning to walk takes 40 minutes of experience.
+
+<p align="center">
+  <img src="https://github.com/AaltoVision/ant-robot/blob/icra21_cleanup/training_results.jpg?raw=true" alt="Training results"/>
+</p>
 
 The training code is decoupled into a training client and a rollout server, communicating using ZeroMQ. The training client (`train_client.py`) controls the whole learning process. It sends the latest policy weights to the rollout server (`rollout_server.py`) at the beginning of each episode. The rollout server loads the policy weights, collects the latest observations from the robot, and sends the action computed using the policy network back to the robot. After completing an episode, the rollout server sends back the collected data to the train client. The newly collected data is added to a replay buffer and the agent is updated a few times by sampling from this replay buffer.
 
