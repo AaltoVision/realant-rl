@@ -7,7 +7,7 @@ Video:
   </a>
 </p>
 
-This repository contains source code for experiments in the paper titled "[RealAnt: An Open-Source Low-Cost Quadruped for Research in Real-World Reinforcement Learning]()" by Rinu Boney*, Jussi Sainio*, Mikko Kaivola, Arno Solin, and Juho Kannala. It consists of:
+This repository contains source code for experiments in the paper titled "[RealAnt: An Open-Source Low-Cost Quadruped for Research in Real-World Reinforcement Learning](https://arxiv.org/abs/2011.03085)" by Rinu Boney*, Jussi Sainio*, Mikko Kaivola, Arno Solin, and Juho Kannala. It consists of:
 - Supporting software for reinforcement learning with the RealAnt robot
 - PyTorch implementations of TD3 and SAC algorithms
 - MuJoCo and PyBullet environments of the RealAnt robot
