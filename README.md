@@ -9,7 +9,7 @@ Video:
 
 This repository contains source code for experiments in the paper titled "[RealAnt: An Open-Source Low-Cost Quadruped for Research in Real-World Reinforcement Learning](https://arxiv.org/abs/2011.03085)" by Rinu Boney*, Jussi Sainio*, Mikko Kaivola, Arno Solin, and Juho Kannala. It consists of:
 - Supporting software for reinforcement learning with the RealAnt robot
-- PyTorch implementations of TD3 and SAC algorithms
+- PyTorch implementations of REDQ, TD3 and SAC algorithms
 - MuJoCo and PyBullet environments of the RealAnt robot
 
 ### RealAnt
@@ -39,7 +39,7 @@ We consider three benchmark tasks:
 2. **Turn** 180 degrees.
 3. **Walk** forward as fast as possible.
 
-TD3 algorithm is able to successfully learn all three tasks. Learning to stand takes around 12 minutes of experience, learning to turn takes 35 minues of experience, and learning to walk takes 40 minutes of experience.
+REDQ and TD3 algorithms are able to successfully learn all three tasks. With REDQ, learning to stand takes around 5 minutes of experience, learning to turn takes 5 minues of experience, and learning to walk takes 10 minutes of experience.
 
 <p align="center">
   <img src="https://github.com/AaltoVision/realant-rl/blob/main/training_results.jpg?raw=true" alt="Training results"/>
@@ -84,7 +84,7 @@ Optional arguments:
 
 | Parameter                 | Default       | Description   |	
 | :------------------------ |:-------------:| :-------------|
-| --agent 		| td3	 | 'td3' or 'sac'
+| --agent 		| redq	 | 'redq' or 'td3' or 'sac'
 | --env   		| mujoco | 'mujoco' or 'pybullet'
 | --task  		| walk 	 | 'sleep' or 'turn' or 'walk
 | --seed  		| 1	 | random seed
@@ -92,6 +92,8 @@ Optional arguments:
 | --xyz_noise_std 	| 0.01 	| std of Gaussian noise added to body_xyz measurements
 | --rpy_noise_std 	| 0.01 	| std of Gaussian noise added to body_rpy measurements
 | --min_obs_stack 	| 4 	| number of past observations to be stacked
+| --n_updates_mul 	| 8 	| multiply number of updates after each episode
+| --critic_num_nets 	| 4 	| number of critic networks for REDQ
 
 The PyBullet environment only supports the 'walk' task and does not support the latency or delay argments.
 
