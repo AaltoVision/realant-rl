@@ -5,7 +5,7 @@ import argparse
 import pickle
 import torch
 import zmq
-from td3 import TD3
+from redq import REDQ as TD3
 from rollout_server import OBS_SIZE, ACT_SIZE
 
 parser = argparse.ArgumentParser(description='RealAnt training client')
@@ -27,6 +27,8 @@ else:
     latest_file = max(list_of_files, key=os.path.getctime)
     start_episode = int(latest_file.split('.')[-2].split('_')[-1]) + 1
 
+print(f'resuming from {start_episode}')
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 if args.resume != '':
@@ -46,7 +48,8 @@ for episode in range(start_episode, start_episode+args.n_episodes):
     now = datetime.now().isoformat()
     print(f'\nEpisode {episode} {now}')
     print(f'Collecting data...')
-    if (not args.resume) and (episode < 10):
+    # if (not args.resume) and (episode < 10):
+    if episode < 10:
         print("Random episode")
         socket.send_pyobj((args.task, None))
     else:
@@ -65,17 +68,22 @@ for episode in range(start_episode, start_episode+args.n_episodes):
     new_transitions, new_info = new_data
 
     _, _, rewards, _, _ = zip(*new_transitions)
-    print(f'Return: {sum([r[0] for r in rewards])}')
+    cum_rewards = sum([r[0] for r in rewards])
+    print(f'Return: {cum_rewards}')
+    if args.task == 'walk' and cum_rewards < -4:
+        print('Return does not look right. Please check tracking.')
+        exit()
 
     # update replay buffer
     td3.replay_buffer.extend(new_transitions)
 
-    print('Training...')
-    start_time = datetime.utcnow()
-    for _ in range(len(new_transitions)):
-        td3.update_parameters()
+    if episode >= 9:
+        print('Training...')
+        start_time = datetime.utcnow()
+        for _ in range(len(new_transitions)*10):
+            td3.update_parameters()
 
-    print("Training took: %3.2fs" % (datetime.utcnow() - start_time).total_seconds())
+        print("Training took: %3.2fs" % (datetime.utcnow() - start_time).total_seconds())
 
     # save agent
     with open(f'{project_dir}/td3_{episode}.pickle', 'wb') as f:

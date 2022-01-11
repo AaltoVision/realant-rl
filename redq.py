@@ -31,14 +31,16 @@ class MLP(nn.Module):
 
 class Critic(nn.Module):
     """ Twin Q-networks """
-    def __init__(self, obs_size, act_size, hidden_size):
+    def __init__(self, obs_size, act_size, hidden_size, num_nets):
         super().__init__()
-        self.net1 = MLP(obs_size+act_size, 1, hidden_size)
-        self.net2 = MLP(obs_size+act_size, 1, hidden_size)
+        self.nets = nn.ModuleList([
+            MLP(obs_size+act_size, 1, hidden_size)
+            for _ in range(num_nets)
+        ])
 
     def forward(self, state, action):
         state_action = torch.cat([state, action], 1)
-        return self.net1(state_action), self.net2(state_action)
+        return [net(state_action) for net in self.nets]
 
 
 class Actor(nn.Module):
@@ -58,7 +60,7 @@ class Actor(nn.Module):
         return action[0].detach().cpu().numpy()
 
 
-class TD3:
+class REDQ:
     def __init__(self,
         device,
         obs_size,
@@ -70,7 +72,8 @@ class TD3:
         policy_noise=0.2,
         noise_clip=0.5,
         policy_freq=1,
-        exploration_noise=0.1
+        exploration_noise=0.1,
+        critic_num_nets=10,
     ):
         self.device = device
         self.act_size = act_size
@@ -81,12 +84,13 @@ class TD3:
         self.noise_clip = noise_clip
         self.policy_freq = policy_freq
         self.exploration_noise = exploration_noise
+        self.critic_num_nets = critic_num_nets
         self._timestep = 0
 
-        self.critic = Critic(obs_size, act_size, hidden_size).to(device)
+        self.critic = Critic(obs_size, act_size, hidden_size, critic_num_nets).to(device)
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=3e-4)
         
-        self.critic_target = Critic(obs_size, act_size, hidden_size).to(device)
+        self.critic_target = Critic(obs_size, act_size, hidden_size, critic_num_nets).to(device)
         for target_param, param in zip(self.critic_target.parameters(), self.critic.parameters()):
             target_param.data.copy_(param.data)
         
@@ -120,12 +124,15 @@ class TD3:
             noise = (torch.randn_like(action)*self.policy_noise).clamp(-self.noise_clip, self.noise_clip)
             next_action = (self.actor_target(next_state) + noise).clamp(-self.max_action, self.max_action)
 
-            q1_next, q2_next = self.critic_target(next_state, next_action)
+            qs_next = self.critic_target(next_state, next_action)
+            random_idxs = np.random.permutation(self.critic_num_nets)
+            q1_next = qs_next[random_idxs[0]]
+            q2_next = qs_next[random_idxs[1]]
             q_next = torch.min(q1_next, q2_next)
             q_target = reward + not_done * self.gamma * q_next
 
-        q1, q2 = self.critic(state, action)
-        critic_loss = F.mse_loss(q1, q_target) + F.mse_loss(q2, q_target)
+        qs = self.critic(state, action)
+        critic_loss = sum([F.mse_loss(q, q_target) for q in qs])
 
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
@@ -135,8 +142,9 @@ class TD3:
 
         if self._timestep % self.policy_freq == 0:
             action_new = self.actor(state)
-            q1_new, q2_new = self.critic(state, action_new)
-            actor_loss = -q1_new.mean()
+            qs_new = self.critic(state, action_new)
+            q_new = torch.stack(qs_new, 0).mean(0)
+            actor_loss = -q_new.mean()
 
             self.actor_optimizer.zero_grad()
             actor_loss.backward()
